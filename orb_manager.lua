@@ -1,7 +1,7 @@
 
 local args = {...}
 
-crafting_item = ""
+crafting_item = nil
 
 valid_inputs = {"1","energized steel", "2","Blazing Crystal", "3","spirited crystal","4","niotic crystal","5","ender core","6","uranite"}
 
@@ -33,11 +33,27 @@ counter = 1
 
 local first_output = true
 
-local redstone_on = false
+local redstone_on_msg_displayed = false
 
-function rs_toggle(message,state) 
-    if redstone.getOutput("left") then
+local redstone_off_msg_displayed = false
+
+
+
+function rs_reset()
+
+    redstone.setOutput("left", false)
+    redstone.setOutput("right", false)
+    redstone.setOutput("front", false)
+
+end
+
+function rs_toggle(message,state)
+
+    if redstone.getOutput("left") and redstone_on_msg_displayed == false then
         print(message)
+        redstone_on_msg_displayed = true
+    elseif redstone_off_msg_displayed == false then
+        redstone_off_msg_displayed = true
     end
     
     redstone.setOutput("left", state)
@@ -51,62 +67,31 @@ function energized_steel()
             if first_output then
                 print("crafting energized steel")
                 first_output = false
-                print(orb_inv[1].name)
 
-                print("orb_inv[1].name == 'minecraft:iron_ingot'")
-
-                print((orb_inv[1].name == ingr["irn"] and orb_inv[2].name == ingr["gld"]) or (orb_inv[1].name == ingr["gld"] and orb_inv[2].name == ingr["irn"]))
-
-                print(orb_inv[2].name)
                 -- first_output end
             end
 
-            local one_iron = false
-            local one_gold = false
-
-            print(ingr["irn"])
-            print(ingr["gld"])
-
-            print(orb_inv[1].name)
-            print(orb_inv[1].count)
-            print(orb_inv[2].name)
-            print(orb_inv[2].count)
+            local one_iron = 0
+            local one_gold = 0
 
 
+            for i, item in pairs(orb_inv) do
 
-            if orb_inv[1].name == ingr["irn"] and orb_inv[1].count == 1 then
+                if orb_inv[i].name == ingr["iron_ingot"] then
 
-                    one_iron = true
-            else
-                    one_iron = false
+                    one_iron = one_iron + item.count
 
-            end
+                end
 
-            if one_iron == false and orb_inv[2].name == ingr["irn"] and orb_inv[2].count == 1 then
+                if orb_inv[i].name == ingr["gold_ingot"] then
 
-                one_iron = true
+                   one_gold = one_gold + item.count
+
+                end
 
             end
 
-            if orb_inv[1].name == ingr["gld"] and orb_inv[1].count == 1 then
-
-               one_gold = true
-
-            end
-
-            if one_gold == false and orb_inv[2].name == ingr["gld"] and orb_inv[2].count == 1 then
-
-                one_gold = true
-
-            end
-
-
-            print("one_iron: ")
-            print(one_iron)
-            print("one_gold: ")
-            print(one_gold)
-
-            if one_iron and one_gold  then
+            if one_iron == 1 and one_gold == 1  then
 
                 rs_toggle("One Gold and One Iron ingot detected. Turning redstone on",true)
 
@@ -247,11 +232,11 @@ function nitro_crystal()
         local two_redstone_blocks = 0
         local one_blazing_crystal_block = 0
 
-       print(orb_inv[1].name)
-       print(orb_inv[1].count)
+
 
        for i, item in pairs(orb_inv) do
 
+            print("slot: ".. i .."name: "..item.name .." count: ".. item.count)
             if orb_inv[i].name == ingr["nether_star"] and orb_inv[i].count == 1 then
 
                           one_nether_star = one_nether_star + 1
@@ -261,7 +246,7 @@ function nitro_crystal()
             if orb_inv[i].name == ingr["redstone_block"] and (orb_inv[i].count == 1 or orb_inv[i].count == 2) then
                 if two_redstone_blocks == 0 then
                     two_redstone_blocks = orb_inv[i].count
-                elseif two_redstone_blocks == 1
+                elseif two_redstone_blocks == 1 then
                     two_redstone_blocks = two_redstone_blocks + orb_inv[i].count
                 end
             end
@@ -317,7 +302,7 @@ function ender_core()
                if orb_inv[i].name == ingr["dielectric_casing"] and (orb_inv[i].count == 1 or orb_inv[i].count == 2) then
                    if dielectric_casing == 0 then
                        dielectric_casing = orb_inv[i].count
-                   elseif dielectric_casing == 1
+                   elseif dielectric_casing == 1 then
                        dielectric_casing = dielectric_casing + orb_inv[i].count
                    end
                end
@@ -375,117 +360,141 @@ function uranite()
        end
 end
 
-for i, v in ipairs(args) do
-    print("Argument " .. i .. ": " .. v)
+function main()
 
-    if contains_string( valid_inputs,  v)   then
-        crafting_item = v
-    end
+    --start
+    rs_reset()
 
-end
+    if chest ~= nil then
+        for i, v in ipairs(args) do
+            print("Argument " .. i .. ": " .. v)
 
-for slot, item in pairs(chest.list()) do
-    orb_inv[counter] = item
-    counter = counter + 1
-    chestCount = chestCount + 1
-end
+            if contains_string( valid_inputs,  v)   then
+                crafting_item = v
+            end
 
-if crafting_item == nil then 
-    while true do
-        print("Select one of the following(type in the number or word): ")
-        print("Otherwise type 0 or quit to quit")
-
-        for i, v in ipairs(options_for_input) do
-            print(i .. ": "..v)
         end
 
-        local input = read()
-        if string.lower(input) == "0" or string.lower(input) == "quit" then
-            print("Quiting")
-            return
-        end
-        if string.lower(input) == "1" or string.lower(input) == "energized steel" then
-           crafting_item = "esteel"
-           break
-        end
-
-        if string.lower(input) == "2" or string.lower(input) == "blazing crystal" then
-            crafting_item = "blazing"
-            break
-        end
-
-        if string.lower(input) == "3" or string.lower(input) == "niotic crystal" then
-            crafting_item = "niotic"
-            break
-        end
-
-        if string.lower(input) == "4" or string.lower(input) == "spirited crystal" then
-            crafting_item = "spirited"
-            break
-        end
-        if string.lower(input) == "5" or string.lower(input) == "nitro crystal" then
-            crafting_item = "nitro"
-            break
-        end
-        if string.lower(input) == "6" or string.lower(input) == "ender core" then
-            crafting_item = "ender"
-            break
-        end
-        if string.lower(input) == "7" or string.lower(input) == "uranite" then
-            crafting_item = "uranite"
-            break
-        end
-
-    end
-end
-
-
-while crafting_item ~= nil  do
-
-    print("Crafting "..crafting_item)
-
-    chest = peripheral.find(orb_name)
-    chestCount = 0
-    for slot, item in pairs(chest.list()) do
-        chestCount = chestCount +1 
-    end
-    print(chestCount)        
-    -- update orb_inv if chest count changed
-     
-    if chestCount ~= #orb_inv  then
-        orb_inv = {}
-        counter = 1
         for slot, item in pairs(chest.list()) do
             orb_inv[counter] = item
             counter = counter + 1
+            chestCount = chestCount + 1
+            print("slot: "..slot.."item name: "..item.name.." Count: "..item.count)
         end
-        first_output = true                 
-    end
-        
-    if crafting_item == "esteel" and #orb_inv == 2 then
-        energized_steel()
-    elseif crafting_item == "blazing" and #orb_inv == 1 then
-        blazing_crystal()
-    elseif crafting_item == "niotic" and #orb_inv == 1 then
-        niotic_crystal()
-    elseif crafting_item == "spirited" and #orb_inv == 1 then
-        spirited_crystal()
-    elseif crafting_item == "nitro" and #orb_inv == 4 then
-         nitro_crystal()
-    elseif crafting_item == "ender" and #orb_inv == 4 then
-            ender_core()
-    elseif crafting_item == "uranite" and #orb_inv == 1 then
-            uranite()
-   else -- if count 2 else
-       rs_toggle("redstone off",false)
-           
-         
-          
-     -- end if esteel 
-     end
-   
 
-    sleep()
-    --while end
+        if crafting_item == nil then
+            while true do
+                print("Select one of the following(type in the number or word): ")
+                print("Otherwise type 0 or quit to quit")
+
+                for i, v in ipairs(options_for_input) do
+                    print(i .. ": "..v)
+                end
+
+                local input = read()
+                if string.lower(input) == "0" or string.lower(input) == "quit" then
+                    print("Quiting")
+                    return
+                end
+                if string.lower(input) == "1" or string.lower(input) == "energized steel" then
+                   crafting_item = "esteel"
+                   break
+                end
+
+                if string.lower(input) == "2" or string.lower(input) == "blazing crystal" then
+                    crafting_item = "blazing"
+                    break
+                end
+
+                if string.lower(input) == "3" or string.lower(input) == "niotic crystal" then
+                    crafting_item = "niotic"
+                    break
+                end
+
+                if string.lower(input) == "4" or string.lower(input) == "spirited crystal" then
+                    crafting_item = "spirited"
+                    break
+                end
+                if string.lower(input) == "5" or string.lower(input) == "nitro crystal" then
+                    crafting_item = "nitro"
+                    break
+                end
+                if string.lower(input) == "6" or string.lower(input) == "ender core" then
+                    crafting_item = "ender"
+                    break
+                end
+                if string.lower(input) == "7" or string.lower(input) == "uranite" then
+                    crafting_item = "uranite"
+                    break
+                end
+
+            end
+        end
+
+
+        print("Crafting "..crafting_item)
+
+
+        while crafting_item ~= nil  do
+
+
+
+            chest = peripheral.find(orb_name)
+
+            chestCount = 0
+            for slot, item in pairs(chest.list()) do
+                chestCount = chestCount +1
+            end
+            -- update orb_inv if chest count changed
+
+            if chestCount ~= #orb_inv  then
+                print(chestCount)
+                orb_inv = {}
+                counter = 1
+                for slot, item in pairs(chest.list()) do
+                    orb_inv[counter] = item
+                    counter = counter + 1
+                    print("slot: "..slot.."item name: "..item.name.." Count: "..item.count)
+                end
+                first_output = true
+                redstone_on_msg_displayed = false
+                redstone_off_msg_displayed = false
+            end
+            if first_output then
+                print(chestCount)
+            end
+
+            if crafting_item == "esteel" and #orb_inv == 2 then
+                energized_steel()
+            elseif crafting_item == "blazing" and #orb_inv == 1 then
+                blazing_crystal()
+            elseif crafting_item == "niotic" and #orb_inv == 1 then
+                niotic_crystal()
+            elseif crafting_item == "spirited" and #orb_inv == 1 then
+                spirited_crystal()
+            elseif crafting_item == "nitro" and #orb_inv == 4 then
+                 nitro_crystal()
+            elseif crafting_item == "ender" and #orb_inv == 4 then
+                    ender_core()
+            elseif crafting_item == "uranite" and #orb_inv == 1 then
+                    uranite()
+           else -- if count 2 else
+               rs_toggle("redstone off",false)
+
+
+
+             -- end if esteel
+             end
+
+
+            sleep()
+            --while end
+        end
+    else
+        print("Program requires a ".. orb_name.." placed behind the computer")
+        return
+    end
+
 end
 
+main()
