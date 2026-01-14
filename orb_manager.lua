@@ -5,7 +5,7 @@ crafting_item = nil
 
 valid_inputs = {"1","energized steel", "2","Blazing Crystal", "3","spirited crystal","4","niotic crystal","5","ender core","6","uranite"}
 
-options_for_input = {"1: energized steel", "2: Blazing Crystal", "3: spirited crystal","4: niotic crystal", "5: Ender Core","6: uranite"}
+options_for_input = {"1: energized steel", "2: Blazing Crystal", "3: niotic crystal","4: spirited crystal", "5: nitro crystal", "6: Ender Core","7: uranite"}
 
 
 ingr = {}
@@ -17,9 +17,9 @@ ingr["diamond"] = "minecraft:diamond"
 ingr["emerald"] = "minecraft:emerald"
 ingr["redstone_block"] = "minecraft:redstone_block"
 ingr["nether_star"] = "minecraft:nether_star"
-ingr["blaze_crystal_block"] = "powah:crafting/blazing_crystal_block"
-ingr["tiny_capacitor"] = "powah:crafting/capacitor_basic_tiny"
-ingr["dielectric_casing"] = "powah:crafting/dielectric_casing"
+ingr["blaze_crystal_block"] = "powah:blazing_crystal_block"
+ingr["tiny_capacitor"] = "powah:capacitor_basic_tiny"
+ingr["dielectric_casing"] = "powah:dielectric_casing"
 ingr["ender_eye"] = "minecraft:ender_eye"
 ingr["uranium_ingot"] = "ftbmaterials:uranium_ingot"
 
@@ -44,6 +44,7 @@ function rs_reset()
     redstone.setOutput("left", false)
     redstone.setOutput("right", false)
     redstone.setOutput("front", false)
+    redstone.setOutput("top", false)
 
 end
 
@@ -59,6 +60,7 @@ function rs_toggle(message,state)
     redstone.setOutput("left", state)
     redstone.setOutput("right", state)
     redstone.setOutput("front", state)
+    redstone.setOutput("top", state)
     
 end
 
@@ -206,7 +208,7 @@ function spirited_crystal()
 
     end
 
-    print("one_blaze_rod: ")
+    print("one_emerald: ")
     print(one_emerald)
 
     if one_emerald  then
@@ -224,7 +226,7 @@ function nitro_crystal()
    if first_output then
            print("crafting nitro crystal")
            first_output = false
-           print(orb_inv[1].name)
+
            -- first_output end
        end
 
@@ -237,21 +239,19 @@ function nitro_crystal()
        for i, item in pairs(orb_inv) do
 
             print("slot: ".. i .."name: "..item.name .." count: ".. item.count)
-            if orb_inv[i].name == ingr["nether_star"] and orb_inv[i].count == 1 then
+            if orb_inv[i].name == ingr["nether_star"] then
 
                           one_nether_star = one_nether_star + 1
 
             end
 
-            if orb_inv[i].name == ingr["redstone_block"] and (orb_inv[i].count == 1 or orb_inv[i].count == 2) then
-                if two_redstone_blocks == 0 then
-                    two_redstone_blocks = orb_inv[i].count
-                elseif two_redstone_blocks == 1 then
-                    two_redstone_blocks = two_redstone_blocks + orb_inv[i].count
-                end
+            if orb_inv[i].name == ingr["redstone_block"] then
+
+                two_redstone_blocks = two_redstone_blocks + orb_inv[i].count
+
             end
 
-            if orb_inv[i].name == ingr["blaze_crystal_block"] and orb_inv[i].count == 1 then
+            if orb_inv[i].name == ingr["blaze_crystal_block"] then
 
                 one_blazing_crystal_block = one_blazing_crystal_block + 1
 
@@ -261,8 +261,8 @@ function nitro_crystal()
 
 
 
-       print("one_blaze_rod: ")
-       print(one_nether_star)
+       print("redstone_block: "..two_redstone_blocks.." nether_star: "..one_nether_star.." blaze_crystal_block: "..one_blazing_crystal_block)
+
 
        if one_nether_star == 1 and two_redstone_blocks == 2 and one_blazing_crystal_block == 1   then
 
@@ -299,12 +299,10 @@ function ender_core()
 
               end
 
-               if orb_inv[i].name == ingr["dielectric_casing"] and (orb_inv[i].count == 1 or orb_inv[i].count == 2) then
-                   if dielectric_casing == 0 then
-                       dielectric_casing = orb_inv[i].count
-                   elseif dielectric_casing == 1 then
-                       dielectric_casing = dielectric_casing + orb_inv[i].count
-                   end
+               if orb_inv[i].name == ingr["dielectric_casing"] then
+
+                dielectric_casing = dielectric_casing + orb_inv[i].count
+
                end
 
                if orb_inv[i].name == ingr["ender_eye"] and orb_inv[i].count == 1 then
@@ -315,7 +313,7 @@ function ender_core()
 
           end
 
-          if tiny_capacitor == 1 and dielectric_casing == 2 and ender_eye == 1   then
+          if tiny_capacitor == 1 and dielectric_casing == 1 and ender_eye == 1   then
 
             rs_toggle(" tiny_capacitor, dielectric_casing, and one ender_eye detected. Turning redstone on",true)
 
@@ -415,14 +413,17 @@ function main()
                     crafting_item = "spirited"
                     break
                 end
+
                 if string.lower(input) == "5" or string.lower(input) == "nitro crystal" then
                     crafting_item = "nitro"
                     break
                 end
+
                 if string.lower(input) == "6" or string.lower(input) == "ender core" then
                     crafting_item = "ender"
                     break
                 end
+
                 if string.lower(input) == "7" or string.lower(input) == "uranite" then
                     crafting_item = "uranite"
                     break
@@ -448,7 +449,7 @@ function main()
             -- update orb_inv if chest count changed
 
             if chestCount ~= #orb_inv  then
-                print(chestCount)
+                print("chestCount"..chestCount.."previous orb_inv: "..#orb_inv)
                 orb_inv = {}
                 counter = 1
                 for slot, item in pairs(chest.list()) do
@@ -474,7 +475,7 @@ function main()
                 spirited_crystal()
             elseif crafting_item == "nitro" and #orb_inv == 4 then
                  nitro_crystal()
-            elseif crafting_item == "ender" and #orb_inv == 4 then
+            elseif crafting_item == "ender" and #orb_inv == 3 then
                     ender_core()
             elseif crafting_item == "uranite" and #orb_inv == 1 then
                     uranite()
